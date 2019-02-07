@@ -3,7 +3,7 @@ package net.techcable.srglib;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
-import static java.util.Objects.*;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A java reference type

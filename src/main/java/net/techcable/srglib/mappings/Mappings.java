@@ -1,25 +1,21 @@
 package net.techcable.srglib.mappings;
 
-import java.lang.reflect.Field;
+import net.techcable.srglib.FieldData;
+import net.techcable.srglib.JavaType;
+import net.techcable.srglib.MethodData;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
-import javax.annotation.Nullable;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.ImmutableBiMap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-
-import net.techcable.srglib.FieldData;
-import net.techcable.srglib.JavaType;
-import net.techcable.srglib.MethodData;
-
-import static java.util.Objects.*;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A mapping from one set of source names to another.
@@ -166,9 +162,9 @@ public interface Mappings {
      * @return the transformed data
      */
     default Mappings transform(Mappings original) {
-        ImmutableBiMap.Builder<JavaType, JavaType> types = ImmutableBiMap.builder();
-        ImmutableBiMap.Builder<MethodData, MethodData> methods = ImmutableBiMap.builder();
-        ImmutableBiMap.Builder<FieldData, FieldData> fields = ImmutableBiMap.builder();
+        Map<JavaType, JavaType> types = new HashMap<>();
+        Map<MethodData, MethodData> methods = new HashMap<>();
+        Map<FieldData, FieldData> fields = new HashMap<>();
         original.classes().forEach(originalType -> {
             JavaType newType = this.getNewType(originalType);
             types.put(originalType, newType);
@@ -181,7 +177,7 @@ public interface Mappings {
             FieldData newFieldData = this.getNewField(originalFieldData);
             fields.put(originalFieldData, newFieldData);
         });
-        return ImmutableMappings.create(types.build(), methods.build(), fields.build());
+        return ImmutableMappings.create(types, methods, fields);
     }
 
     /**
@@ -199,7 +195,7 @@ public interface Mappings {
      * @param mappings the mappings to chain together
      */
     static Mappings chain(Mappings... mappings) {
-        return chain(ImmutableList.copyOf(mappings));
+        return chain(Collections.unmodifiableList(Arrays.asList(mappings)));
     }
 
     /**
@@ -207,13 +203,13 @@ public interface Mappings {
      *
      * @param mappings the mappings to chain together
      */
-    static Mappings chain(ImmutableList<? extends Mappings> mappings) {
+    static Mappings chain(List<? extends Mappings> mappings) {
         ImmutableMappings chained = empty();
         for (int i = 0; i < mappings.size(); i++) {
             Mappings mapping = mappings.get(i);
-            ImmutableBiMap.Builder<JavaType, JavaType> classes = ImmutableBiMap.builder();
-            ImmutableBiMap.Builder<MethodData, MethodData> methods = ImmutableBiMap.builder();
-            ImmutableBiMap.Builder<FieldData, FieldData> fields = ImmutableBiMap.builder();
+            Map<JavaType, JavaType> classes = new HashMap<>();
+            Map<MethodData, MethodData> methods = new HashMap<>();
+            Map<FieldData, FieldData> fields = new HashMap<>();
             ImmutableMappings inverted = chained.inverted();
 
             // If we encounter a new name, add it to the set
@@ -247,7 +243,7 @@ public interface Mappings {
                 renamed = mapping.getNewMethod(renamed);
                 methods.put(original, renamed);
             });
-            chained = ImmutableMappings.create(classes.build(), methods.build(), fields.build());
+            chained = ImmutableMappings.create(Collections.unmodifiableMap(classes), Collections.unmodifiableMap(methods), Collections.unmodifiableMap(fields));
         }
         return chained;
     }
@@ -291,7 +287,7 @@ public interface Mappings {
      * @param packages the packages to remap
      * @return a package mapping
      */
-    static Mappings createPackageMappings(ImmutableMap<String, String> packages) {
+    static Mappings createPackageMappings(Map<String, String> packages) {
         return createRenamingMappings((original) -> {
             String originalPackage = original.getPackageName();
             String newPackage = packages.get(originalPackage);

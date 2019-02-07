@@ -1,14 +1,10 @@
 package net.techcable.srglib.mappings;
 
-import java.util.HashMap;
-
-import com.google.common.collect.HashBiMap;
-
 import net.techcable.srglib.FieldData;
 import net.techcable.srglib.JavaType;
 import net.techcable.srglib.MethodData;
 
-import static com.google.common.base.Preconditions.*;
+import java.util.HashMap;
 
 /**
  * Mappings that can be modified
@@ -36,12 +32,8 @@ public interface MutableMappings extends Mappings {
      * @throws IllegalArgumentException if the signatures mismatch
      */
     default void putMethod(MethodData original, MethodData renamed) {
-        checkArgument(
-                original.mapTypes(this::getNewType).hasSameTypes(renamed),
-                "Remapped method data types (%s) don't correspond to original types (%s)",
-                renamed,
-                original
-        );
+        if(!original.mapTypes(this::getNewType).hasSameTypes(renamed))
+            throw new IllegalArgumentException("Remapped method data types (" + renamed + ") don't correspond to original types (" + original + ")");
         putMethod(original, renamed.getName());
     }
 
@@ -65,12 +57,8 @@ public interface MutableMappings extends Mappings {
      * @throws IllegalArgumentException if the signatures mismatch
      */
     default void putField(FieldData original, FieldData renamed) {
-        checkArgument(
-                original.mapTypes(this::getNewType).hasSameTypes(renamed),
-                "Remapped field data (%s) doesn't correspond to original types (%s)",
-                renamed,
-                original
-        );
+        if(!original.mapTypes(this::getNewType).hasSameTypes(renamed))
+            throw new IllegalArgumentException("Remapped field data (" + renamed + ") doesn't correspond to original types (" + original + ")");
         putField(original, renamed.getName());
     }
 
@@ -99,6 +87,6 @@ public interface MutableMappings extends Mappings {
      * @return a new mutable mappings
      */
     static MutableMappings create() {
-        return new SimpleMappings(HashBiMap.create(), new HashMap<>(), new HashMap<>());
+        return new SimpleMappings(new HashMap<>(), new HashMap<>(), new HashMap<>());
     }
 }

@@ -1,7 +1,9 @@
 package net.techcable.srglib;
 
+
+import org.checkerframework.checker.nullness.qual.NonNull;
+
 import java.util.function.UnaryOperator;
-import javax.annotation.Nonnull;
 
 /**
  * An enumeration of java's 8 primitive types and 'VOID.
@@ -58,7 +60,7 @@ public enum PrimitiveType implements JavaType {
             byDescriptorChar[type.descriptorChar] = type;
         }
     }
-    @Nonnull
+    @NonNull
     public static PrimitiveType fromDescriptorChar(char descriptorChar) {
         PrimitiveType primitiveType;
         if (descriptorChar <= byDescriptorChar.length && (primitiveType = byDescriptorChar[descriptorChar]) != null) {

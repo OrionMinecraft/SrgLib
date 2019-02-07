@@ -1,37 +1,39 @@
 package net.techcable.srglib.utils;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import com.google.common.collect.ImmutableBiMap;
-import com.google.common.collect.ImmutableMap;
-
-import static java.util.Objects.*;
+import static java.util.Objects.requireNonNull;
 
 public final class ImmutableMaps {
     private ImmutableMaps() {
     }
 
-    public static <K, V> ImmutableBiMap<K, V> createBiMap(Set<K> keys, Function<K, V> valueFunction) {
-        ImmutableBiMap.Builder<K, V> builder = ImmutableBiMap.builder();
-        keys.forEach((key) -> builder.put(key, valueFunction.apply(key)));
-        return builder.build();
+    public static <K, V> Map<K, V> createBiMap(Set<K> keys, Function<K, V> valueFunction) {
+        return createMap(keys, valueFunction);
     }
 
-    public static <K, V> ImmutableMap<K, V> createMap(Set<K> keys, Function<K, V> valueFunction) {
-        ImmutableMap.Builder<K, V> builder = ImmutableMap.builder();
-        keys.forEach((key) -> builder.put(key, valueFunction.apply(key)));
-        return builder.build();
+    public static <K, V> Map<K, V> createMap(Set<K> keys, Function<K, V> valueFunction) {
+        Map<K, V> map = new HashMap<>();
+        keys.forEach((key) -> map.put(key, valueFunction.apply(key)));
+        return Collections.unmodifiableMap(map);
     }
 
-    public static <K, V> ImmutableBiMap<V, K> inverse(Map<K, V> input) {
-        return ImmutableBiMap.copyOf(input).inverse();
+    public static <K, V> Map<V, K> inverse(Map<K, V> input) {
+        Map<V, K> newMap = new HashMap<>(input.size());
+        input.forEach((key, value) -> {
+            newMap.put(value, key);
+        });
+
+        return Collections.unmodifiableMap(newMap);
     }
 
     public static <K, V> String joinToString(
-            ImmutableMap<K, V> map,
+            Map<K, V> map,
             BiFunction<K, V, String> asString,
             String delimiter,
             String prefix,

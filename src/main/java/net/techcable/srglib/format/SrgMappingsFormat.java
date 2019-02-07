@@ -1,11 +1,5 @@
 package net.techcable.srglib.format;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import javax.annotation.Nonnull;
-
-import com.google.common.io.LineProcessor;
-
 import net.techcable.srglib.FieldData;
 import net.techcable.srglib.JavaType;
 import net.techcable.srglib.MethodData;
@@ -13,8 +7,11 @@ import net.techcable.srglib.MethodSignature;
 import net.techcable.srglib.mappings.Mappings;
 import net.techcable.srglib.mappings.MutableMappings;
 import net.techcable.srglib.utils.Exceptions;
+import net.techcable.srglib.utils.LineProcessor;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
-import static com.google.common.base.Preconditions.*;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 
 /* package */ class SrgMappingsFormat implements MappingsFormat {
     public static final SrgMappingsFormat INSTANCE = new SrgMappingsFormat();
@@ -64,21 +61,21 @@ import static com.google.common.base.Preconditions.*;
         private final MutableMappings result = MutableMappings.create();
 
         @Override
-        public boolean processLine(@Nonnull String line) throws IOException {
+        public boolean processLine(@NonNull String line) throws IOException {
             parseLine(line);
             return true;
         }
 
-        public void parseLine(@Nonnull String line) {
+        public void parseLine(@NonNull String line) {
             line = line.trim(); // Strip whitespace
             if (line.startsWith("#") || line.isEmpty()) return;
-            checkArgument(line.length() >= 4, "Invalid line: %s", line);
+            if(line.length() < 4) throw new IllegalArgumentException("Invalid line: " + line);
             String id = line.substring(0, 2);
             String[] args = line.substring(4).split(" ");
             final String originalInternalName, renamedInternalName;
             switch (id) {
                 case "MD":
-                    checkArgument(args.length == 4, "Invalid line: %s", line);
+                    if(args.length != 4) throw new IllegalArgumentException("Invalid line: " + line);
                     originalInternalName = args[0];
                     MethodSignature originalSignature = MethodSignature.fromDescriptor(args[1]);
                     renamedInternalName = args[2];
@@ -88,7 +85,7 @@ import static com.google.common.base.Preconditions.*;
                     result.putMethod(originalMethodData, renamedMethodData);
                     return;
                 case "FD":
-                    checkArgument(args.length == 2, "Invalid line: %s", line);
+                    if(args.length != 2) throw new IllegalArgumentException("Invalid line: " + line);
                     originalInternalName = args[0];
                     renamedInternalName = args[1];
                     FieldData originalFieldData = FieldData.fromInternalName(originalInternalName);
@@ -96,7 +93,7 @@ import static com.google.common.base.Preconditions.*;
                     result.putField(originalFieldData, renamedFieldData);
                     return;
                 case "CL":
-                    checkArgument(args.length == 2, "Invalid line: %s", line);
+                    if(args.length != 2) throw new IllegalArgumentException("Invalid line: " + line);
                     originalInternalName = args[0];
                     renamedInternalName = args[1];
                     JavaType originalType = JavaType.fromInternalName(originalInternalName);

@@ -1,11 +1,9 @@
 package net.techcable.srglib;
 
+import java.util.List;
 import java.util.function.UnaryOperator;
 
-import com.google.common.collect.ImmutableList;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.Objects.*;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A method's declaring type, name, and parameter types, uniquely identifying it in a jar.
@@ -47,7 +45,7 @@ public final class MethodData {
      *
      * @return the parameter types.
      */
-    public ImmutableList<JavaType> getParameterTypes() {
+    public List<JavaType> getParameterTypes() {
         return signature.getParameterTypes();
     }
 
@@ -153,7 +151,7 @@ public final class MethodData {
     public static MethodData create(
             JavaType declaringType,
             String name,
-            ImmutableList<JavaType> parameterTypes,
+            List<JavaType> parameterTypes,
             JavaType returnType
     ) {
         return create(declaringType, name, MethodSignature.create(parameterTypes, returnType));
@@ -178,7 +176,7 @@ public final class MethodData {
 
     public static MethodData fromInternalName(String joinedName, MethodSignature signature) {
         int index = joinedName.lastIndexOf('/');
-        checkArgument(index >= 0 && index < joinedName.length() - 1, "Invalid internal name: %s", joinedName);
+        if(index < 0 || index >= (joinedName.length() - 1)) throw new IllegalArgumentException("Invalid internal name: " + joinedName);
         JavaType declaringType = JavaType.fromInternalName(joinedName.substring(0, index));
         String name = joinedName.substring(index + 1);
         return create(declaringType, name, signature);

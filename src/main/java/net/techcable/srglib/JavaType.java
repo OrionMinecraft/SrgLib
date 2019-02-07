@@ -1,11 +1,11 @@
 package net.techcable.srglib;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+
 import java.util.Locale;
 import java.util.function.UnaryOperator;
-import javax.annotation.Nonnull;
 
-import static com.google.common.base.Preconditions.*;
-import static java.util.Objects.*;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A java type/class.
@@ -113,7 +113,7 @@ public interface JavaType {
     static JavaType createArray(int dimensions, JavaType elementType) {
         requireNonNull(elementType, "Null element type");
         if (dimensions == 0) return elementType;
-        checkArgument(dimensions >= 0, "Negative dimensions: %s", dimensions);
+        if(dimensions < 0) throw new IllegalArgumentException("Negative dimensions: " + dimensions);
         ArrayType result = new ArrayType(elementType);
         while (--dimensions > 0) {
             result = new ArrayType(result); // Keep nesting
@@ -132,7 +132,7 @@ public interface JavaType {
      * @return the type
      * @throws IllegalArgumentException if the name is invalid
      */
-    @Nonnull
+    @NonNull
     static JavaType fromName(String name) {
         requireNonNull(name, "Null name");
         if (name.endsWith("[]")) {

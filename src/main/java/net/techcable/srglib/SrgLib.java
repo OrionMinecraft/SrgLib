@@ -1,10 +1,6 @@
 package net.techcable.srglib;
 
-import com.google.common.base.Preconditions;
-
 import net.techcable.srglib.mappings.Mappings;
-
-import static com.google.common.base.Preconditions.*;
 
 /**
  * Static utility methods for handling srg.
@@ -20,7 +16,7 @@ public final class SrgLib {
      * @param name the name to check
      */
     public static boolean isValidIdentifier(String name) {
-        checkArgument(!name.isEmpty(), "Empty name: %s", name);
+        if(name.isEmpty()) throw new IllegalArgumentException("Empty name: " + name);
         return Character.isJavaIdentifierStart(name.codePointAt(0)) && name.codePoints()
                 .skip(1) // Skip the first char, since we already checked it
                 .allMatch(Character::isJavaIdentifierPart);
@@ -32,17 +28,13 @@ public final class SrgLib {
      * @param mappings the mappings to check
      */
     public static void checkConsistency(Mappings mappings) {
-        mappings.forEachField((originalField, renamedField) -> checkArgument(
-                originalField.mapTypes(mappings::getNewType).hasSameTypes(renamedField),
-                "Remapped field data (%s) doesn't correspond to original types (%s)",
-                originalField,
-                renamedField
-        ));
-        mappings.forEachMethod((originalMethod, renamedMethod) -> checkArgument(
-                originalMethod.mapTypes(mappings::getNewType).hasSameTypes(renamedMethod),
-                "Remapped method data (%s) doesn't correspond to original types (%s)",
-                originalMethod,
-                renamedMethod
-        ));
+        mappings.forEachField((originalField, renamedField) -> {
+            if(!originalField.mapTypes(mappings::getNewType).hasSameTypes(renamedField))
+                throw new IllegalArgumentException("Remapped field data (" + originalField + ") doesn't correspond to original types (" + renamedField + ")");
+        });
+        mappings.forEachMethod((originalMethod, renamedMethod) -> {
+            if(!originalMethod.mapTypes(mappings::getNewType).hasSameTypes(renamedMethod))
+                throw new IllegalArgumentException("Remapped method data (" + originalMethod + ") doesn't correspond to original types (" + renamedMethod + ")");
+        });
     }
 }

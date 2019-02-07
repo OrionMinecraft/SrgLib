@@ -1,25 +1,26 @@
 package net.techcable.srglib;
 
-import java.util.Arrays;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-
 import net.techcable.srglib.format.MappingsFormat;
 import net.techcable.srglib.mappings.ImmutableMappings;
 import net.techcable.srglib.mappings.Mappings;
-import net.techcable.srglib.utils.ImmutableLists;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import static org.junit.Assert.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
 public class MappingsChainTest {
     @Parameterized.Parameters
     public static Object[][] testData() {
+        Map<String, String> packageMappings = new HashMap<>();
+        packageMappings.put("", "net.minecraft.server");
+
         return new Object[][] {
                 {
                         new Mappings[]{
@@ -45,7 +46,7 @@ public class MappingsChainTest {
                                         "FD: World/time World/numTicks",
                                         "MD: World/tick ()V World/pulse ()V"
                                 ),
-                                Mappings.createPackageMappings(ImmutableMap.of("", "net.minecraft.server"))
+                                Mappings.createPackageMappings(packageMappings)
                         },
                         MappingsFormat.SEARGE_FORMAT.parseLines(
                                 "CL: aa net/minecraft/server/Entity",
@@ -66,11 +67,11 @@ public class MappingsChainTest {
         };
     }
 
-    private final ImmutableList<Mappings> mappings;
+    private final List<Mappings> mappings;
     private final ImmutableMappings expectedOutput;
 
     public MappingsChainTest(Mappings[] mappings, Mappings expectedOutput) {
-        this.mappings = ImmutableList.copyOf(mappings);
+        this.mappings = Arrays.asList(mappings);
         this.expectedOutput = expectedOutput.snapshot();
     }
 

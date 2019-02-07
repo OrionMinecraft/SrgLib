@@ -1,25 +1,22 @@
 package net.techcable.srglib.mappings;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.function.BiConsumer;
-
-import com.google.common.collect.BiMap;
-
 import net.techcable.srglib.FieldData;
 import net.techcable.srglib.JavaType;
 import net.techcable.srglib.MethodData;
 
-import static com.google.common.base.Preconditions.*;
-import static java.util.Objects.*;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.BiConsumer;
+
+import static java.util.Objects.requireNonNull;
 
 /* package */ class SimpleMappings implements MutableMappings {
-    private final BiMap<JavaType, JavaType> classes;
+    private final Map<JavaType, JavaType> classes;
     private final Map<MethodData, String> methodNames;
     private final Map<FieldData, String> fieldNames;
 
     /* package */ SimpleMappings(
-            BiMap<JavaType, JavaType> classes,
+            Map<JavaType, JavaType> classes,
             Map<MethodData, String> methodNames,
             Map<FieldData, String> fieldNames
     ) {
@@ -30,8 +27,8 @@ import static java.util.Objects.*;
 
     @Override
     public void putClass(JavaType original, JavaType renamed) {
-        checkArgument(original.isReferenceType(), "Original type isn't a reference type: %s", original);
-        checkArgument(renamed.isReferenceType(), "Renamed type isn't a reference type: %s", renamed);
+        if(!original.isReferenceType()) throw new IllegalArgumentException("Original type isn't a reference type: " + original);
+        if(!renamed.isReferenceType()) throw new IllegalArgumentException("Renamed type isn't a reference type: " + renamed);
         if (original.equals(renamed)) {
             classes.remove(original);
         } else {
@@ -41,17 +38,17 @@ import static java.util.Objects.*;
 
     @Override
     public void putMethod(MethodData original, String newName) {
-        methodNames.put(checkNotNull(original, "Null original"), checkNotNull(newName, "Null newName"));
+        methodNames.put(requireNonNull(original, "Null original"), requireNonNull(newName, "Null newName"));
     }
 
     @Override
     public void putField(FieldData original, String newName) {
-        fieldNames.put(checkNotNull(original, "Null original"), checkNotNull(newName, "Null newName"));
+        fieldNames.put(requireNonNull(original, "Null original"), requireNonNull(newName, "Null newName"));
     }
 
     @Override
     public JavaType getNewClass(JavaType original) {
-        checkArgument(original.isReferenceType(), "Type isn't a reference type: %s", original);
+        if(!original.isReferenceType()) throw new IllegalArgumentException("Type isn't a reference type: " + original);
         return classes.getOrDefault(requireNonNull(original), original);
     }
 

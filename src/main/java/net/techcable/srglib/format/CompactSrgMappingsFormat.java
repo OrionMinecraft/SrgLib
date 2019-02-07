@@ -1,21 +1,19 @@
 package net.techcable.srglib.format;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import javax.annotation.Nonnull;
-
-import com.google.common.collect.ImmutableBiMap;
-import com.google.common.io.LineProcessor;
-
 import net.techcable.srglib.FieldData;
 import net.techcable.srglib.JavaType;
 import net.techcable.srglib.MethodData;
 import net.techcable.srglib.MethodSignature;
 import net.techcable.srglib.mappings.ImmutableMappings;
 import net.techcable.srglib.mappings.Mappings;
+import net.techcable.srglib.utils.LineProcessor;
+import org.checkerframework.checker.nullness.qual.NonNull;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /* package */ class CompactSrgMappingsFormat implements MappingsFormat {
     public static final CompactSrgMappingsFormat INSTANCE = new CompactSrgMappingsFormat();
@@ -76,12 +74,12 @@ import net.techcable.srglib.mappings.Mappings;
         private final Map<FieldData, String> fields = new LinkedHashMap<>();
 
         @Override
-        public boolean processLine(@Nonnull String line) throws IOException {
+        public boolean processLine(@NonNull String line) throws IOException {
             parseLine(line);
             return true;
         }
 
-        public void parseLine(@Nonnull String line) {
+        public void parseLine(@NonNull String line) {
             line = line.trim(); // Strip whitespace
             if (line.startsWith("#") || line.isEmpty()) return;
             String[] args = line.split(" ");
@@ -113,16 +111,16 @@ import net.techcable.srglib.mappings.Mappings;
 
         @Override
         public Mappings getResult() {
-            ImmutableBiMap<JavaType, JavaType> types = ImmutableBiMap.copyOf(this.types);
-            ImmutableBiMap.Builder<MethodData, MethodData> methods = ImmutableBiMap.builder();
-            ImmutableBiMap.Builder<FieldData, FieldData> fields = ImmutableBiMap.builder();
+            Map<JavaType, JavaType> types = new HashMap<>(this.types);
+            Map<MethodData, MethodData> methods = new HashMap<>();
+            Map<FieldData, FieldData> fields = new HashMap<>();
             this.methods.forEach((originalData, newName) -> methods.put(originalData, originalData
                     .mapTypes(original -> types.getOrDefault(original, original))
                     .withName(newName)));
             this.fields.forEach((originalData, newName) -> fields.put(originalData, originalData
                     .mapTypes(original -> types.getOrDefault(original, original))
                     .withName(newName)));
-            return ImmutableMappings.create(types, methods.build(), fields.build());
+            return ImmutableMappings.create(types, methods, fields);
         }
     }
 }

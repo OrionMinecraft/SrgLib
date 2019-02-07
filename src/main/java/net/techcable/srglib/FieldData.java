@@ -2,8 +2,7 @@ package net.techcable.srglib;
 
 import java.util.function.UnaryOperator;
 
-import static com.google.common.base.Preconditions.*;
-import static java.util.Objects.*;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A field's name and declaring type.
@@ -15,7 +14,7 @@ public final class FieldData {
     private FieldData(JavaType declaringType, String name) {
         this.declaringType = requireNonNull(declaringType, "Null declaring type");
         this.name = requireNonNull(name, "Null name");
-        checkArgument(SrgLib.isValidIdentifier(name), "Invalid name: %s", name);
+        if(!SrgLib.isValidIdentifier(name)) throw new IllegalArgumentException("Invalid name: " + name);
     }
 
     /**
@@ -91,7 +90,7 @@ public final class FieldData {
 
     public static FieldData fromInternalName(String internalName) {
         int index = internalName.lastIndexOf('/');
-        checkArgument(index >= 0 && index < internalName.length() - 1, "Invalid internal name: %s", internalName);
+        if(index < 0 || index >= (internalName.length() - 1)) throw new IllegalArgumentException("Invalid internal name: " + internalName);
         JavaType declaringType = JavaType.fromInternalName(internalName.substring(0, index));
         String name = internalName.substring(index + 1);
         return create(declaringType, name);

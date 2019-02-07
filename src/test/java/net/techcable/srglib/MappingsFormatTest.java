@@ -1,21 +1,19 @@
 package net.techcable.srglib;
 
-import java.util.List;
-
-import com.google.common.collect.ImmutableList;
-
 import net.techcable.srglib.format.MappingsFormat;
 import net.techcable.srglib.mappings.Mappings;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import static org.junit.Assert.*;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
 public class MappingsFormatTest {
-    private static final ImmutableList<String> TEST_LINES = ImmutableList.of(
+    private static final List<String> TEST_LINES = Arrays.asList(
             "CL: org/spigotmc/XRay net/techcable/xray/XRay",
             "CL: org/spigotmc/XRay$Manager net/techcable/xray/XRayManager",
             "CL: org/spigotmc/XRay$Injector net/techcable/xray/injector/Injector",
@@ -31,7 +29,7 @@ public class MappingsFormatTest {
             "MD: org/spigotmc/XRay/deobfuscate ([BLjava/util/Set;)I net/techcable/xray/XRay/doAFunkyDance ([BLjava/util/Set;)I",
             "MD: org/spigotmc/XRay$Manager/aquire ()Lorg/spigotmc/XRay; net/techcable/xray/XRayManager/get ()Lnet/techcable/xray/XRay;"
     );
-    private static final ImmutableList<String> COMPACT_TEST_LINES = ImmutableList.of(
+    private static final List<String> COMPACT_TEST_LINES = Arrays.asList(
             "org/spigotmc/XRay net/techcable/xray/XRay",
             "org/spigotmc/XRay$Manager net/techcable/xray/XRayManager",
             "org/spigotmc/XRay$Injector net/techcable/xray/injector/Injector",
@@ -55,8 +53,8 @@ public class MappingsFormatTest {
         };
     }
     private final MappingsFormat mappingsFormat;
-    private final ImmutableList<String> testLines;
-    public MappingsFormatTest(MappingsFormat mappingsFormat, ImmutableList<String> testLines) {
+    private final List<String> testLines;
+    public MappingsFormatTest(MappingsFormat mappingsFormat, List<String> testLines) {
         this.mappingsFormat = mappingsFormat;
         this.testLines = testLines;
     }
@@ -71,7 +69,7 @@ public class MappingsFormatTest {
                 MethodData.create(
                         JavaType.fromName("net.techcable.minecraft.NoHax"),
                         "isHacking",
-                        ImmutableList.of(
+                        Arrays.asList(
                                 JavaType.fromName("net.techcable.minecraft.Player"),
                                 PrimitiveType.INT,
                                 PrimitiveType.DOUBLE
@@ -81,7 +79,7 @@ public class MappingsFormatTest {
                 result.getNewMethod(MethodData.create(
                         JavaType.fromName("obfs"),
                         "a",
-                        ImmutableList.of(
+                        Arrays.asList(
                                 JavaType.fromName("obf4"),
                                 PrimitiveType.INT,
                                 PrimitiveType.DOUBLE

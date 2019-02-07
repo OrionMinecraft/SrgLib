@@ -1,17 +1,14 @@
 package net.techcable.srglib.mappings;
 
-import java.util.Set;
-import java.util.function.Function;
-import java.util.function.UnaryOperator;
-import javax.annotation.Nullable;
-
-import com.google.common.collect.ImmutableSet;
-
 import net.techcable.srglib.FieldData;
 import net.techcable.srglib.JavaType;
 import net.techcable.srglib.MethodData;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import java.util.Collections;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /* package */ final class RenamingMappings implements Mappings {
     private final UnaryOperator<JavaType> typeTransformer;
@@ -29,7 +26,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
     @Override
     public JavaType getNewClass(JavaType original) {
-        checkArgument(original.isReferenceType(), "Type isn't a reference type: %s", original);
+        if(!original.isReferenceType()) throw new IllegalArgumentException("Type isn't a reference type: " + original);
         JavaType result = typeTransformer.apply(original);
         return result == null ? original : result;
     }
@@ -50,17 +47,17 @@ import static com.google.common.base.Preconditions.checkArgument;
 
     @Override
     public Set<JavaType> classes() {
-        return ImmutableSet.of();
+        return Collections.emptySet();
     }
 
     @Override
     public Set<MethodData> methods() {
-        return ImmutableSet.of();
+        return Collections.emptySet();
     }
 
     @Override
     public Set<FieldData> fields() {
-        return ImmutableSet.of();
+        return Collections.emptySet();
     }
 
     @Override

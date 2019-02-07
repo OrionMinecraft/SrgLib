@@ -1,33 +1,30 @@
 package net.techcable.srglib.mappings;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.UnaryOperator;
-import javax.annotation.Nullable;
-
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableBiMap;
-
 import net.techcable.srglib.FieldData;
 import net.techcable.srglib.JavaType;
 import net.techcable.srglib.MethodData;
 import net.techcable.srglib.SrgLib;
 import net.techcable.srglib.utils.ImmutableMaps;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-import static com.google.common.base.Preconditions.*;
-import static java.util.Objects.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.BiConsumer;
+
+import static java.util.Objects.requireNonNull;
 
 public final class ImmutableMappings implements Mappings {
-    private final ImmutableBiMap<JavaType, JavaType> classes;
-    private final ImmutableBiMap<MethodData, MethodData> methods;
-    private final ImmutableBiMap<FieldData, FieldData> fields;
-    /* package */ static final ImmutableMappings EMPTY = new ImmutableMappings(ImmutableBiMap.of(), ImmutableBiMap.of(), ImmutableBiMap.of());
+    private final Map<JavaType, JavaType> classes;
+    private final Map<MethodData, MethodData> methods;
+    private final Map<FieldData, FieldData> fields;
+    /* package */ static final ImmutableMappings EMPTY = new ImmutableMappings(Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap());
 
     private ImmutableMappings(
-            ImmutableBiMap<JavaType, JavaType> classes,
-            ImmutableBiMap<MethodData, MethodData> methods,
-            ImmutableBiMap<FieldData, FieldData> fields
+            Map<JavaType, JavaType> classes,
+            Map<MethodData, MethodData> methods,
+            Map<FieldData, FieldData> fields
     ) {
         this.classes = requireNonNull(classes, "Null types");
         this.methods = requireNonNull(methods, "Null methods");
@@ -36,7 +33,7 @@ public final class ImmutableMappings implements Mappings {
 
     @Override
     public JavaType getNewClass(JavaType original) {
-        checkArgument(original.isReferenceType(), "Type isn't a reference type: %s", original);
+        if(!original.isReferenceType()) throw new IllegalArgumentException("Type isn't a reference type: " + original);
         return classes.getOrDefault(requireNonNull(original), original);
     }
 
@@ -89,7 +86,7 @@ public final class ImmutableMappings implements Mappings {
     }
 
     private ImmutableMappings invert0() {
-        ImmutableMappings inverted = new ImmutableMappings(this.classes.inverse(), this.methods.inverse(), this.fields.inverse());
+        ImmutableMappings inverted = new ImmutableMappings(ImmutableMaps.inverse(this.classes), ImmutableMaps.inverse(this.methods), ImmutableMaps.inverse(this.fields));
         inverted.inverted = this;
         return inverted;
     }
@@ -99,10 +96,10 @@ public final class ImmutableMappings implements Mappings {
             Map<MethodData, String> methodNames,
             Map<FieldData, String> fieldNames
     ) {
-        ImmutableBiMap<JavaType, JavaType> classes = ImmutableBiMap.copyOf(originalClasses); // Defensive copy to an ImmutableBiMap
+        Map<JavaType, JavaType> classes = new HashMap<>(originalClasses); // Defensive copy to an ImmutableBiMap
         // No consistency check needed since we're building type-information from scratch
-        ImmutableBiMap.Builder<MethodData, MethodData> methods = ImmutableBiMap.builder();
-        ImmutableBiMap.Builder<FieldData, FieldData> fields = ImmutableBiMap.builder();
+        Map<MethodData, MethodData> methods = new HashMap<>();
+        Map<FieldData, FieldData> fields = new HashMap<>();
         methodNames.forEach((originalData, newName) -> {
             MethodData newData = originalData
                     .mapTypes((oldType) -> oldType.mapClass(oldClass -> classes.getOrDefault(oldClass, oldClass)))
@@ -117,9 +114,9 @@ public final class ImmutableMappings implements Mappings {
             fields.put(originalData, newData);
         });
         return new ImmutableMappings(
-                ImmutableBiMap.copyOf(classes),
-                methods.build(),
-                fields.build()
+                Collections.unmodifiableMap(classes),
+                Collections.unmodifiableMap(methods),
+                Collections.unmodifiableMap(fields)
         );
     }
 
@@ -137,11 +134,11 @@ public final class ImmutableMappings implements Mappings {
      * @return immutable mappings with the specified data
      */
     public static ImmutableMappings create(
-            ImmutableBiMap<JavaType, JavaType> classes,
-            ImmutableBiMap<MethodData, MethodData> methods,
-            ImmutableBiMap<FieldData, FieldData> fields
+            Map<JavaType, JavaType> classes,
+            Map<MethodData, MethodData> methods,
+            Map<FieldData, FieldData> fields
     ) {
-        ImmutableMappings result = new ImmutableMappings(classes, methods, fields);
+        ImmutableMappings result = new ImmutableMappings(Collections.unmodifiableMap(classes), Collections.unmodifiableMap(methods), Collections.unmodifiableMap(fields));
         SrgLib.checkConsistency(result);
         return result;
     }
@@ -153,9 +150,9 @@ public final class ImmutableMappings implements Mappings {
             return other.snapshot();
         } else {
             return create(
-                    ImmutableMaps.createBiMap(other.classes(), other::getNewType),
-                    ImmutableMaps.createBiMap(other.methods(), other::getNewMethod),
-                    ImmutableMaps.createBiMap(other.fields(), other::getNewField)
+                    ImmutableMaps.createMap(other.classes(), other::getNewType),
+                    ImmutableMaps.createMap(other.methods(), other::getNewMethod),
+                    ImmutableMaps.createMap(other.fields(), other::getNewField)
             );
         }
     }
@@ -199,22 +196,15 @@ public final class ImmutableMappings implements Mappings {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(Mappings.class)
-                .add("classes", ImmutableMaps.joinToString(
-                        classes,
-                        (original, renamed) -> String.format("  %s = %s", original.getName(), renamed.getName()),
-                        "\n", "{", "}"
-                ))
-                .add("methods", ImmutableMaps.joinToString(
-                        methods,
-                        (original, renamed) -> String.format("  %s = %s", original, renamed),
-                        "\n", "{\n", "\n}"
-                ))
-                .add("fields", ImmutableMaps.joinToString(
-                        fields,
-                        (original, renamed) -> String.format("  %s = %s", original, renamed),
-                        "\n", "{\n", "\n}"
-                ))
-                .toString();
+        return "Mappings{classes=" + ImmutableMaps.joinToString(classes,
+                (original, renamed) -> String.format("  %s = %s", original.getName(), renamed.getName()),
+                "\n", "{", "}") +
+                ", methods=" + ImmutableMaps.joinToString(methods,
+                (original, renamed) -> String.format("  %s = %s", original, renamed),
+                "\n", "{\n", "\n}") +
+                ", fields=" + ImmutableMaps.joinToString(fields,
+                (original, renamed) -> String.format("  %s = %s", original, renamed),
+                "\n", "{\n", "\n}") +
+                "}";
     }
 }

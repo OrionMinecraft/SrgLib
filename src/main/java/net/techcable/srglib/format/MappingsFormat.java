@@ -1,32 +1,28 @@
 package net.techcable.srglib.format;
 
-import java.io.BufferedWriter;
-import java.io.CharArrayReader;
-import java.io.CharArrayWriter;
+import net.techcable.srglib.mappings.Mappings;
+import net.techcable.srglib.utils.Exceptions;
+import net.techcable.srglib.utils.LineProcessor;
+
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Scanner;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.io.CharStreams;
-import com.google.common.io.LineProcessor;
-import com.google.common.io.LineReader;
-
-import net.techcable.srglib.mappings.Mappings;
-import net.techcable.srglib.utils.Exceptions;
-
-import static net.techcable.srglib.utils.Exceptions.*;
+import static net.techcable.srglib.utils.Exceptions.sneakyThrowing;
 
 /**
  * A format for serializing mappings to and from text.
@@ -36,10 +32,10 @@ public interface MappingsFormat {
     MappingsFormat COMPACT_SEARGE_FORMAT = CompactSrgMappingsFormat.INSTANCE;
 
     default Mappings parse(Readable readable) throws IOException {
-        LineReader lineReader = new LineReader(readable);
+        Scanner scanner = new Scanner(readable);
         LineProcessor<Mappings> lineProcessor = createLineProcessor();
         String line;
-        while ((line = lineReader.readLine()) != null) {
+        while ((line = scanner.nextLine()) != null) {
             if (!lineProcessor.processLine(line)) {
                 break;
             }
@@ -48,8 +44,14 @@ public interface MappingsFormat {
     }
 
     default Mappings parseFile(File file) throws IOException {
-        try (Reader in = new InputStreamReader(new FileInputStream(file), Charsets.UTF_8)) {
+        try (Reader in = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)) {
             // Don't worry, parse(Readable) buffers internally
+            return parse(in);
+        }
+    }
+
+    default Mappings parseFile(Path path) throws IOException {
+        try (Reader in = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
             return parse(in);
         }
     }
@@ -73,16 +75,20 @@ public interface MappingsFormat {
     void write(Mappings mappings, Appendable output) throws IOException;
 
     default void writeToFile(Mappings mappings, File file) throws IOException {
-        try (Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), Charsets.UTF_8))) {
+        writeToFile(mappings, file.toPath());
+    }
+
+    default void writeToFile(Mappings mappings, Path path) throws IOException {
+        try (Writer out = Files.newBufferedWriter(path, StandardOpenOption.WRITE)) {
             write(mappings, out);
         }
     }
 
     default List<String> toLines(Mappings mappings) {
-        CharArrayWriter result = new CharArrayWriter();
+        StringWriter result = new StringWriter();
         return sneakyThrowing(() -> {
             this.write(mappings, result);
-            return CharStreams.readLines(new CharArrayReader(result.toCharArray()));
+            return Stream.of(result.toString().split("\n")).collect(Collectors.toList());
         }).get();
     }
 }
