@@ -4,11 +4,9 @@ import net.techcable.srglib.mappings.Mappings;
 import net.techcable.srglib.utils.Exceptions;
 import net.techcable.srglib.utils.LineProcessor;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -18,7 +16,6 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Scanner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,11 +28,10 @@ public interface MappingsFormat {
     MappingsFormat SEARGE_FORMAT = SrgMappingsFormat.INSTANCE;
     MappingsFormat COMPACT_SEARGE_FORMAT = CompactSrgMappingsFormat.INSTANCE;
 
-    default Mappings parse(Readable readable) throws IOException {
-        Scanner scanner = new Scanner(readable);
+    default Mappings parse(BufferedReader readable) throws IOException {
         LineProcessor<Mappings> lineProcessor = createLineProcessor();
         String line;
-        while ((line = scanner.nextLine()) != null) {
+        while ((line = readable.readLine()) != null) {
             if (!lineProcessor.processLine(line)) {
                 break;
             }
@@ -44,14 +40,11 @@ public interface MappingsFormat {
     }
 
     default Mappings parseFile(File file) throws IOException {
-        try (Reader in = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)) {
-            // Don't worry, parse(Readable) buffers internally
-            return parse(in);
-        }
+        return parseFile(file.toPath());
     }
 
     default Mappings parseFile(Path path) throws IOException {
-        try (Reader in = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
+        try (BufferedReader in = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
             return parse(in);
         }
     }
