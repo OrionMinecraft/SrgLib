@@ -33,8 +33,8 @@ public final class MethodSignature {
     }
 
     public MethodSignature mapTypes(UnaryOperator<JavaType> transformer) {
-        JavaType newReturnType = transformer.apply(returnType);
-        List<JavaType> newParameterTypes = this.parameterTypes.stream().map(transformer).collect(Collectors.toList());
+        JavaType newReturnType = returnType.mapClass(transformer);
+        List<JavaType> newParameterTypes = this.parameterTypes.stream().map(type -> type.mapClass(transformer)).collect(Collectors.toList());
         MethodSignature result = create(newParameterTypes, newReturnType);
         if (result.equals(this)) {
             return this;
