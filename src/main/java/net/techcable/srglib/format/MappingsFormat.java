@@ -27,6 +27,7 @@ import static net.techcable.srglib.utils.Exceptions.sneakyThrowing;
 public interface MappingsFormat {
     MappingsFormat SEARGE_FORMAT = SrgMappingsFormat.INSTANCE;
     MappingsFormat COMPACT_SEARGE_FORMAT = CompactSrgMappingsFormat.INSTANCE;
+    MappingsFormat TINY_FORMAT = TinyMappingsFormat.INSTANCE;
 
     default Mappings parse(BufferedReader readable) throws IOException {
         LineProcessor<Mappings> lineProcessor = createLineProcessor();
